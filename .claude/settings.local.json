@@ -3,7 +3,12 @@
     "allow": [
       "Bash(pip install:)",
       "Bash(python -c \"from modules import ALL_PLATFORMS; print\\(f'{len\\(ALL_PLATFORMS\\)} platforms loaded'\\); [print\\(f'  - {p.name}'\\) for p in ALL_PLATFORMS]\")",
-      "Bash(python usertrail.py torvalds --all --timeout 8)"
+      "Bash(python usertrail.py torvalds --all --timeout 8)",
+      "Bash(python -c \"from modules import ALL_PLATFORMS; print\\(f'{len\\(ALL_PLATFORMS\\)} platforms'\\)\")",
+      "Bash(python usertrail.py --help)",
+      "Bash(python usertrail.py torvalds --json results.json --csv results.csv --timeout 8)",
+      "Bash(python -c \"from modules import ALL_PLATFORMS; print\\(f'{len\\(ALL_PLATFORMS\\)} platforms:'\\); [print\\(f'  {p.name}'\\) for p in ALL_PLATFORMS]\")",
+      "Bash(python usertrail.py testuser123 --all --timeout)"
     ]
   }
 }

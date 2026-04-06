@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""UserTrail — Username reconnaissance across European & international platforms."""
+"""UserTrail — French & European platform OSINT — what Sherlock misses."""
 
 import argparse
 import asyncio
+import csv
+import json
 import sys
+import webbrowser
 
 import httpx
 from rich.console import Console
 from rich.table import Table
-from rich.live import Live
-from rich.text import Text
 
 from modules import ALL_PLATFORMS, check_platform
 from modules.base import Status
@@ -31,6 +32,10 @@ HEADERS = {
     "Accept-Language": "fr-FR,fr;q=0.9,en;q=0.8",
 }
 
+console = Console()
+
+
+# ── Output helpers ──────────────────────────────────────────────────
 
 def build_table(
     username: str,
@@ -59,10 +64,50 @@ def build_table(
     return table
 
 
-async def run(username: str, timeout: float, show_all: bool) -> list[tuple[str, Status, str]]:
-    console = Console()
-    console.print(BANNER, style="bold cyan")
-    console.print(f"Searching for username: [bold]{username}[/bold]\n")
+def results_to_dicts(
+    username: str, results: list[tuple[str, Status, str]]
+) -> list[dict]:
+    return [
+        {"username": username, "platform": name, "status": status.value, "url": url}
+        for name, status, url in sorted(results, key=lambda r: r[0].lower())
+    ]
+
+
+def export_json(all_results: dict[str, list[tuple[str, Status, str]]], path: str):
+    data = {}
+    for username, results in all_results.items():
+        data[username] = results_to_dicts(username, results)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    console.print(f"[bold green]JSON saved to {path}[/bold green]")
+
+
+def export_csv(all_results: dict[str, list[tuple[str, Status, str]]], path: str):
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["username", "platform", "status", "url"])
+        writer.writeheader()
+        for username, results in all_results.items():
+            writer.writerows(results_to_dicts(username, results))
+    console.print(f"[bold green]CSV saved to {path}[/bold green]")
+
+
+def verify_in_browser(results: list[tuple[str, Status, str]]):
+    found = [(name, url) for name, status, url in results if status == Status.FOUND]
+    if not found:
+        console.print("[dim]No found profiles to verify.[/dim]")
+        return
+    console.print(f"\n[bold]Opening {len(found)} profile(s) in browser...[/bold]")
+    for name, url in found:
+        console.print(f"  -> {name}: {url}")
+        webbrowser.open(url)
+
+
+# ── Core scan logic ─────────────────────────────────────────────────
+
+async def scan_username(
+    username: str, timeout: float, show_all: bool, verify: bool
+) -> list[tuple[str, Status, str]]:
+    console.print(f"\nSearching for username: [bold]{username}[/bold]")
 
     async with httpx.AsyncClient(
         headers=HEADERS,
@@ -81,19 +126,59 @@ async def run(username: str, timeout: float, show_all: bool) -> list[tuple[str, 
     found = sum(1 for _, s, _ in results if s == Status.FOUND)
     errors = sum(1 for _, s, _ in results if s == Status.ERROR)
     console.print(
-        f"\n[bold green]{found}[/bold green] found · "
+        f"[bold green]{found}[/bold green] found · "
         f"[dim]{len(results) - found - errors} not found[/dim] · "
         f"[bold yellow]{errors}[/bold yellow] errors"
     )
 
+    if verify:
+        verify_in_browser(results)
+
     return results
+
+
+async def run(args: argparse.Namespace):
+    console.print(BANNER, style="bold cyan")
+
+    # Collect usernames: single or batch
+    usernames = []
+    if args.batch:
+        with open(args.batch, encoding="utf-8") as f:
+            for line in f:
+                name = line.strip()
+                if name and not name.startswith("#"):
+                    usernames.append(name)
+        console.print(
+            f"[bold]Batch mode:[/bold] {len(usernames)} username(s) "
+            f"loaded from {args.batch}"
+        )
+    else:
+        usernames.append(args.username)
+
+    # Scan each username
+    all_results: dict[str, list[tuple[str, Status, str]]] = {}
+    for username in usernames:
+        all_results[username] = await scan_username(
+            username, args.timeout, args.all, args.verify
+        )
+
+    # Export if requested
+    if args.json:
+        export_json(all_results, args.json)
+    if args.csv:
+        export_csv(all_results, args.csv)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="UserTrail — Username OSINT across European & international platforms",
+        description="UserTrail — French & European platform OSINT — what Sherlock misses",
     )
-    parser.add_argument("username", help="Username to search for")
+    parser.add_argument(
+        "username",
+        nargs="?",
+        default=None,
+        help="Username to search for",
+    )
     parser.add_argument(
         "-a", "--all",
         action="store_true",
@@ -105,8 +190,33 @@ def main():
         default=10.0,
         help="HTTP request timeout in seconds (default: 10)",
     )
+    parser.add_argument(
+        "--json",
+        metavar="FILE",
+        help="Export results to a JSON file",
+    )
+    parser.add_argument(
+        "--csv",
+        metavar="FILE",
+        help="Export results to a CSV file",
+    )
+    parser.add_argument(
+        "--batch",
+        metavar="FILE",
+        help="Read usernames from a file (one per line)",
+    )
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Open found profile URLs in the default browser",
+    )
+
     args = parser.parse_args()
-    asyncio.run(run(args.username, args.timeout, args.all))
+
+    if not args.username and not args.batch:
+        parser.error("provide a username or use --batch FILE")
+
+    asyncio.run(run(args))
 
 
 if __name__ == "__main__":
