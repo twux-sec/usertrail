@@ -2,7 +2,7 @@
 
 **French & European platform OSINT — what Sherlock misses.**
 
-Sherlock covers the big international platforms. UserTrail fills the gap with 29 French and European services: marketplaces, forums, business registries, freelance platforms, and niche communities that fly under the radar of standard OSINT tools.
+Sherlock covers the big international platforms. UserTrail fills the gap with 65+ French and European services: marketplaces, forums, business registries, freelance platforms, blogs, and niche communities that fly under the radar of standard OSINT tools.
 
 ## Installation
 
@@ -33,18 +33,39 @@ python usertrail.py johndoe --verify
 python usertrail.py johndoe --timeout 15
 ```
 
-## Supported Platforms (29)
+## Supported Platforms (65+)
+
+### France (42)
 
 | Category | Platforms |
 |---|---|
-| Commerce & annonces | Leboncoin, Vinted.fr, Dealabs |
+| Commerce & annonces | Leboncoin, Vinted.fr, Dealabs, Rakuten.fr, Back Market, Cdiscount, Selency |
 | Transports & sorties | Blablacar, LaFourchette/TheFork, OnVaSortir, Couchsurfing |
 | Forums & communautés | Jeuxvideo.com, Doctissimo, CCM (Comment Ça Marche), Marmiton, Skool |
-| Culture & avis | Allocine, Babelio, Trustpilot.fr |
-| Emploi & freelance | LinkedIn.fr, Malt.fr, Welcome to the Jungle, France Travail, Viadeo, Copains d'avant |
+| Tech & gaming | Hardware.fr (HFR), Caradisiac, Koreus, JeuxOnLine, Gamekult, Tric Trac |
+| Femme & lifestyle | Aufeminin |
+| Culture & avis | Allocine, Babelio, SensCritique, Trustpilot.fr |
+| Blogs | Skyrock, Canalblog, Over-blog |
+| Médias & musique | Dailymotion, Deezer |
+| Éducation | OpenClassrooms |
+| Emploi & freelance | LinkedIn.fr, Malt.fr, Welcome to the Jungle, France Travail, APEC, Cadremploi, Viadeo, Copains d'avant |
 | Entreprises & registres | Pappers.fr, Societe.com, Infogreffe, Pages Jaunes |
+| Immobilier | SeLoger, PAP.fr |
 | Finance | BoursoBank |
-| Créateurs & financement | MYM.fans, Ulule, KissKissBankBank |
+| Créateurs & financement | MYM.fans, Ulule, KissKissBankBank, Tipeee, uTip, HelloAsso, Leetchi |
+
+### Europe (23)
+
+| Country | Platforms |
+|---|---|
+| Espagne | Wallapop, Milanuncios, Vinted.es, Blablacar.es |
+| Allemagne | Kleinanzeigen.de, Vinted.de, Blablacar.de, AutoScout24 |
+| Italie | Subito.it, Vinted.it, Blablacar.it |
+| Pays-Bas | Marktplaats |
+| Belgique | 2dehands.be, Immoweb.be |
+| Suisse | Ricardo.ch, Tutti.ch |
+| Autriche | Willhaben.at |
+| Pologne | Allegro.pl, OLX.pl |
 
 ## Adding a New Platform
 
