@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:)",
+      "Bash(python -c \"from modules import ALL_PLATFORMS; print\\(f'{len\\(ALL_PLATFORMS\\)} platforms loaded'\\); [print\\(f'  - {p.name}'\\) for p in ALL_PLATFORMS]\")",
+      "Bash(python usertrail.py torvalds --all --timeout 8)"
+    ]
+  }
+}
