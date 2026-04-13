@@ -4,6 +4,8 @@
 
 Sherlock covers the big international platforms. UserTrail fills the gap with 65+ French and European services: marketplaces, forums, business registries, freelance platforms, blogs, and niche communities that fly under the radar of standard OSINT tools.
 
+> Built with AI-assisted coding. Architecture, methodology, and decisions by the author. All output reviewed, tested, and validated manually.
+
 ## Installation
 
 ```bash
