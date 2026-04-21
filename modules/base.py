@@ -18,6 +18,7 @@ class Platform:
     name: str
     url_template: str  # must contain {username}
     check: Callable[[httpx.AsyncClient, str], Awaitable[Status]] | None = None
+    enabled: bool = True
 
     def profile_url(self, username: str) -> str:
         return self.url_template.format(username=username)

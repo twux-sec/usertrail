@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usertrail"
+version = "0.1.0"
+description = "French & European platform OSINT — what Sherlock misses"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Victor"}]
+dependencies = [
+    "httpx[http2]>=0.27",
+    "rich>=13.0",
+]
+
+[project.scripts]
+usertrail = "usertrail:main"
+
+[tool.setuptools]
+py-modules = ["usertrail"]
+packages = ["modules"]

@@ -117,6 +117,7 @@ async def scan_username(
         tasks = [
             check_platform(client, platform, username)
             for platform in ALL_PLATFORMS
+            if platform.enabled
         ]
         results = await asyncio.gather(*tasks)
 

@@ -63,11 +63,16 @@ async def check_doctissimo(client: httpx.AsyncClient, username: str) -> Status:
 
 
 async def check_allocine(client: httpx.AsyncClient, username: str) -> Status:
-    """Allocine community member search."""
+    """Allocine: missing profiles 301-redirect to the site root."""
     url = f"https://www.allocine.fr/communaute/membre-{username}/"
     try:
-        resp = await client.get(url, follow_redirects=True)
+        resp = await client.get(url, follow_redirects=False)
         if resp.status_code == 200:
+            return Status.FOUND
+        if resp.status_code in (301, 302):
+            loc = resp.headers.get("location", "")
+            if loc.rstrip("/") in ("", "https://www.allocine.fr"):
+                return Status.NOT_FOUND
             return Status.FOUND
         return Status.NOT_FOUND
     except httpx.HTTPError:
@@ -274,11 +279,11 @@ async def check_pagesjaunes(client: httpx.AsyncClient, username: str) -> Status:
 # ── New French platforms ────────────────────────────────────────────
 
 async def check_senscritique(client: httpx.AsyncClient, username: str) -> Status:
-    """SensCritique — French review platform for movies, games, music."""
+    """SensCritique: missing profiles 307-redirect to site root."""
     url = f"https://www.senscritique.com/{username}"
     try:
-        resp = await client.get(url, follow_redirects=True)
-        if resp.status_code == 200 and "collection" in resp.text.lower():
+        resp = await client.get(url, follow_redirects=False)
+        if resp.status_code == 200:
             return Status.FOUND
         return Status.NOT_FOUND
     except httpx.HTTPError:
@@ -298,12 +303,13 @@ async def check_deezer(client: httpx.AsyncClient, username: str) -> Status:
 
 
 async def check_dailymotion(client: httpx.AsyncClient, username: str) -> Status:
-    """Dailymotion — French video platform."""
-    url = f"https://www.dailymotion.com/{username}"
+    """Dailymotion: public JSON API returns 404 for unknown users."""
     try:
-        resp = await client.get(url, follow_redirects=True)
-        if resp.status_code == 200 and "channel" in resp.text.lower():
+        resp = await client.get(f"https://api.dailymotion.com/user/{username}")
+        if resp.status_code == 200:
             return Status.FOUND
+        if resp.status_code == 404:
+            return Status.NOT_FOUND
         return Status.NOT_FOUND
     except httpx.HTTPError:
         return Status.ERROR
@@ -823,6 +829,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Leboncoin",
         url_template="https://www.leboncoin.fr/profil/{username}",
         check=check_leboncoin,
+        enabled=False,  # DataDome: 403 on every direct request
     ),
     Platform(
         name="Vinted.fr",
@@ -838,6 +845,7 @@ ALL_PLATFORMS: list[Platform] = [
     Platform(
         name="Blablacar",
         url_template="https://www.blablacar.fr/user/show/{username}",
+        enabled=False,  # SPA: server always returns identical shell
     ),
     Platform(
         name="LaFourchette/TheFork",
@@ -886,6 +894,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Babelio",
         url_template="https://www.babelio.com/monprofil.php?id_user={username}",
         check=check_babelio,
+        enabled=False,  # URL takes numeric ID only, not a username
     ),
     Platform(
         name="Trustpilot.fr",
@@ -907,6 +916,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Welcome to the Jungle",
         url_template="https://www.welcometothejungle.com/fr/companies/{username}",
         check=check_wttj,
+        enabled=False,  # SPA: content loaded via JS
     ),
     Platform(
         name="France Travail",
@@ -1003,6 +1013,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="OpenClassrooms",
         url_template="https://openclassrooms.com/fr/members/{username}",
         check=check_openclassrooms,
+        enabled=False,  # authwall: all members redirect to /login
     ),
     # ── Créateurs & tips FR ─────────────────────────────────────────
     Platform(
@@ -1110,11 +1121,13 @@ ALL_PLATFORMS: list[Platform] = [
         name="Wallapop (ES)",
         url_template="https://es.wallapop.com/app/user/{username}",
         check=check_wallapop,
+        enabled=False,  # SPA + API requires auth
     ),
     Platform(
         name="Milanuncios (ES)",
         url_template="https://www.milanuncios.com/anuncios-de/{username}/",
         check=check_milanuncios,
+        enabled=False,  # DataDome bot wall
     ),
     Platform(
         name="Vinted.es",
@@ -1125,6 +1138,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Blablacar.es",
         url_template="https://www.blablacar.es/user/show/{username}",
         check=check_blablacar_es,
+        enabled=False,  # SPA
     ),
     # ── Européen : Allemagne ────────────────────────────────────────
     Platform(
@@ -1141,6 +1155,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Blablacar.de",
         url_template="https://www.blablacar.de/user/show/{username}",
         check=check_blablacar_de,
+        enabled=False,  # SPA
     ),
     Platform(
         name="AutoScout24 (EU)",
@@ -1152,6 +1167,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Subito.it",
         url_template="https://www.subito.it/shop/{username}",
         check=check_subito,
+        enabled=False,  # Akamai static SPA shell, same ETag for all usernames
     ),
     Platform(
         name="Vinted.it",
@@ -1162,6 +1178,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Blablacar.it",
         url_template="https://www.blablacar.it/user/show/{username}",
         check=check_blablacar_it,
+        enabled=False,  # SPA
     ),
     # ── Européen : Pays-Bas ─────────────────────────────────────────
     Platform(
@@ -1179,6 +1196,7 @@ ALL_PLATFORMS: list[Platform] = [
         name="Immoweb.be",
         url_template="https://www.immoweb.be/fr/agence/{username}",
         check=check_immoweb,
+        enabled=False,  # 403 bot protection, inconsistent responses
     ),
     # ── Européen : Suisse ───────────────────────────────────────────
     Platform(
@@ -1207,5 +1225,6 @@ ALL_PLATFORMS: list[Platform] = [
         name="OLX.pl",
         url_template="https://www.olx.pl/oferty/uzytkownik/{username}/",
         check=check_olx_pl,
+        enabled=False,  # URL path no longer valid (404 for every user)
     ),
 ]
